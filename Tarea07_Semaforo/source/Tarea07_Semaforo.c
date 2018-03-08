@@ -55,6 +55,7 @@
  */
 
 SemaphoreHandle_t g_led_semaphore;
+SemaphoreHandle_t counter_semaphore;
 
 // SW3
 void PORTA_IRQHandler()
@@ -72,7 +73,7 @@ void PORTC_IRQHandler()
 	BaseType_t xHigherPriorityTaskWoken;
 	PORT_ClearPinsInterruptFlags(PORTC, 1<<6);
 	xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR( g_led_semaphore, &xHigherPriorityTaskWoken );
+	xSemaphoreGiveFromISR( counter_semaphore, &xHigherPriorityTaskWoken );
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
 
@@ -86,15 +87,21 @@ void led_task(void *arg)
 
 }
 
-void dummy(void *arg)
+void Counter_task(void *arg)
 {
-	xSemaphoreGive(g_led_semaphore);
+	//uint8_t counter ;
+	counter_semaphore = xSemaphoreCreateCounting(10,1);
 	for(;;)
 	{
-
+		//xSemaphoreTake(counter_semaphore,portMAX_DELAY);
+		if (uxSemaphoreGetCount(counter_semaphore) == 10)
+		{
+			//counter = 0;
+			counter_semaphore = xSemaphoreCreateCounting(10,0);
+			GPIO_TogglePinsOutput(GPIOB,1<<21);
+		}
 	}
 }
-
 int main(void) {
 
 	/* Init board hardware. */
@@ -144,8 +151,10 @@ int main(void) {
 
 	GPIO_WritePinOutput(GPIOB,21,0);
 	g_led_semaphore = xSemaphoreCreateBinary();
+
+
 	xTaskCreate(led_task, "LED task", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES-1, NULL);
-	//xTaskCreate(dummy, "dummy task", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES-2, NULL);
+	xTaskCreate(Counter_task, "Counter task", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES-2, NULL);
 
 	vTaskStartScheduler();
 	while (1)
