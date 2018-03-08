@@ -98,7 +98,7 @@ void Counter_task(void *arg)
 		{
 			//counter = 0;
 			counter_semaphore = xSemaphoreCreateCounting(10,0);
-			GPIO_TogglePinsOutput(GPIOB,1<<21);
+			GPIO_TogglePinsOutput(GPIOE,1<<26);
 		}
 	}
 }
@@ -114,14 +114,15 @@ int main(void) {
 	CLOCK_EnableClock(kCLOCK_PortB);
 	CLOCK_EnableClock(kCLOCK_PortA); //Enable SW3
 	CLOCK_EnableClock(kCLOCK_PortC); //Enable SW2
+	CLOCK_EnableClock(kCLOCK_PortE); //enable led green
 
 	port_pin_config_t config_led =
 	{ kPORT_PullDisable, kPORT_SlowSlewRate, kPORT_PassiveFilterDisable,
 			kPORT_OpenDrainDisable, kPORT_LowDriveStrength, kPORT_MuxAsGpio,
 			kPORT_UnlockRegister, };
 
-	PORT_SetPinConfig(PORTB, 21, &config_led);
-
+	PORT_SetPinConfig(PORTB, 21, &config_led); //led blue
+	PORT_SetPinConfig(PORTE, 26, &config_led); //led green
 
 	port_pin_config_t config_switch =
 	{ kPORT_PullDisable, kPORT_SlowSlewRate, kPORT_PassiveFilterDisable,
@@ -137,6 +138,7 @@ int main(void) {
 	{ kGPIO_DigitalOutput, 1 };
 
 	GPIO_PinInit(GPIOB, 21, &led_config_gpio);
+	GPIO_PinInit(GPIOE, 26, &led_config_gpio);
 
 	gpio_pin_config_t switch_config_gpio =
 	{ kGPIO_DigitalInput, 1 };
